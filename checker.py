@@ -28,6 +28,22 @@ def send_response(server_socket, success: bool, message: str) -> None:
     server_socket.send(binary_response)
 
 
+def receive_request(server_socket) -> (str, str):
+    """
+    Receives a request on the specified server socket and returns a tuple of two strings.
+    :param server_socket: Server socket as a zmq socket
+    :return: Tuple of two strings, represents "action" and "username" passed in through the request
+    """
+    # Wait for client request
+    client_msg = server_socket.recv()
+    # Decode client binary into a string
+    client_string = client_msg.decode('utf-8')
+    # Deserialize the client string to a JSON/dict object
+    client_json = json.loads(client_string)
+
+    return client_json["action"], client_json["username"]
+
+
 def main():
     # Initialize server socket
     context = zmq.Context()
@@ -35,14 +51,8 @@ def main():
     server_socket.bind("tcp://*:5555")
 
     while True:
-        # Wait for client request
-        client_msg = server_socket.recv()
-        # Decode client binary into a string
-        client_string = client_msg.decode('utf-8')
-        # Deserialize the client string to a JSON/dict object
-        client_json = json.loads(client_string)
-        action = client_json["action"]
-        username = client_json["username"]
+        # Wait to receive a client request
+        action, username = receive_request(server_socket)
         print(f"Attempting to {action} the username {username}...")
 
         # Connect to existing database or create new database if it does not exist
