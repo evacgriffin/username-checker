@@ -32,7 +32,12 @@ def main():
     ''')
     result = db_cursor.fetchall()
 
-    # Print the result
+    # If there is no data
+    if not result:
+        print(f"The {tbl_name} table is empty.")
+        return
+
+    # Otherwise, print the result
     for user in result:
         print(f"{user[0]}: {user[1]}")
 
