@@ -27,7 +27,17 @@ def run_test(client_socket, test_user: dict) -> None:
     server_reply = client_socket.recv()
     # Decode the message
     server_string = server_reply.decode('utf-8')
-    print(f"Received reply: {server_string}")
+
+    # Deserialize the response string to a JSON/dict object
+    server_json = json.loads(server_string)
+    success = server_json["success"]
+    message = server_json["message"]
+
+    # Print the response
+    if success:
+        print("Success!")
+
+    print(f"Server reply: {message}\n")
 
 
 def main():

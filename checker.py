@@ -7,6 +7,27 @@ import sqlite3
 import zmq
 
 
+def send_response(server_socket, success: bool, message: str) -> None:
+    """
+    Sends a response to the client including the specified success and message notification.
+    :param server_socket: Server socket as a zmq socket
+    :param success: Boolean - True if the action was completed successfully, False otherwise
+    :param message: Python string - Message notification to the client
+    :return: No return value
+    """
+    response_json = {
+        "success": success,
+        "message": message
+    }
+
+    # Serialize JSON
+    response_string = json.dumps(response_json)
+    # Binary encode the response
+    binary_response = response_string.encode('utf-8')
+    # Send confirmation to client
+    server_socket.send(binary_response)
+
+
 def main():
     # Initialize server socket
     context = zmq.Context()
@@ -50,8 +71,7 @@ def main():
             # If the specified username already exists, notify client and continue
             # to next loop iteration
             if search_result:
-                # Send confirmation to client
-                server_socket.send(b"Username already exists. Duplicate username was not added.")
+                send_response(server_socket, False, "Username already exists. Duplicate username was not added.")
                 continue
 
             # Otherwise, insert new username into the database
@@ -60,7 +80,7 @@ def main():
             ''', (username,))
 
             # Send confirmation to client
-            server_socket.send(b"Username successfully saved to the database.")
+            send_response(server_socket, True, "Username successfully saved to the database.")
 
         if action.lower() == "delete":
             # Delete the specified username from the database
@@ -69,7 +89,7 @@ def main():
             ''', (username,))
 
             # Send confirmation to client
-            server_socket.send(b"Username successfully deleted from the database.")
+            send_response(server_socket, True, "Username successfully deleted from the database.")
 
         # Commit the transaction and close the connection
         db_connection.commit()
